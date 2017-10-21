@@ -11,8 +11,11 @@
 .PARAMETER Username
     Set username for ESXi/vCenter login.
 
-.PARAMETER RecipientMailbox
-    Set a mailbox to send the report.
+.PARAMETER To
+    Set a recipient mailbox to send the report; [To:] address.
+
+.PARAMETER From
+    Set an outbound mail address; [From:] address
 
 .PARAMETER File
     Set save location for data export to CSV.
@@ -42,8 +45,13 @@ param (
     [Parameter(ValueFromPipeline=$true,HelpMessage="Username with minimum Read-Only access to specified Host(s)/vCenter(s)")]
     [String]$Username = "root",
 
-    [Parameter(ValueFromPipeline=$true,HelpMessage="Recipient group mailbox; (i.e. USCMD.somegroupmailbox.@acme.com)")]
-    [String]$RecipientMailbox = "whatever@acme.something.com,",
+    [Parameter(ValueFromPipeline=$true,HelpMessage="Set the [TO:] address to a group mailbox; (i.e. USCMD.somegroupmailbox.@acme.com)")]
+    [String]$To = "whatever@acme.something.com",
+
+    [Parameter(ValueFromPipeline=$true,HelpMessage="Set [From:] address ; (i.e. System.Automation@hostname.com)")]
+    [String]$From = "System.Automation@hostname.com",
+
+    [String]$SMTPHost = "SMTP.Hostname.Local" ,
 
     [Parameter(ValueFromPipeline=$true,HelpMessage="CSV output file location [will overwrite]")]
     [String]$File = "\\NetShare\Foo\Bar\VMwareSnapshots.csv",
@@ -61,8 +69,8 @@ function Get-SnapInfo {
     #Get snapshots from all servers
     foreach ($ESX in $HostName) {
 		
-	    #If $Creds exists, connect with $Creds
-	    if($Creds) {
+	#If $Creds exists, connect with $Creds
+	if($Creds) {
             
             Write-Host -ForegroundColor Yellow "Attempting connection to $ESX..."
 
@@ -102,10 +110,10 @@ function Get-SnapInfo {
 
         [PSCustomObject] @{
 
-	        VMName = $Snap.VM.Name
-	        SnapshotName = $Snap.Name
-	        Created = $Snap.Created
-	        Description = $Snap.Description
+            VMName = $Snap.VM.Name
+	    SnapshotName = $Snap.Name
+	    Created = $Snap.Created
+	    Description = $Snap.Description
         }
     }
 }
@@ -118,19 +126,19 @@ $SnapInfo | Export-Csv -NoTypeInformation -Path $File -Force
 #Send email	
 if(!($SnapInfo)) {
 
-	$SmtpClient = New-Object System.Net.Mail.SmtpClient
+    $SmtpClient = New-Object System.Net.Mail.SmtpClient
      
-  #SMTP server
-	$SmtpClient.Host = "smtp.hostname.local"  
-	$MailMessage = New-Object System.Net.Mail.MailMessage
+    #SMTP server
+    $SMTPClient.Host = $SMTPHost 
+    $MailMessage = New-Object System.Net.Mail.MailMessage
 
-  #Outbound email address
-	$MailMessage.From = "System.Automation@hostname.com" 
+    #Outbound email address
+    $MailMessage.From = $From 
   
-  #Receiving email group or individual
-	$MailMessage.To.Add("$RecipientMailbox")
-	$MailMessage.IsBodyHtml = 1
-	$MailMessage.Subject = "VMware Snapshots"
-	$MailMessage.Body = $SnapInfo
-	$SmtpClient.Send($MailMessage)
+    #Receiving email group or individual
+    $MailMessage.To.Add("$To")
+    $MailMessage.IsBodyHtml = 1
+    $MailMessage.Subject = "VMware Snapshots"
+    $MailMessage.Body = $SnapInfo
+    $SMTPClient.Send($MailMessage)
 }
