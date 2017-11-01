@@ -36,6 +36,7 @@
 param (
     
     [Parameter(ValueFromPipeline=$true,HelpMessage="Enter Hostname/IP for ESXi Hosts or vCenter")]
+    [ValidateNotNullOrEmpty()] 
     [String[]]$Hostname = @(
         
         "Host1",
@@ -43,17 +44,23 @@ param (
     ),
    
     [Parameter(ValueFromPipeline=$true,HelpMessage="Username with minimum Read-Only access to specified Host(s)/vCenter(s)")]
+    [ValidateNotNullOrEmpty()] 
     [String]$Username = "root",
 
     [Parameter(ValueFromPipeline=$true,HelpMessage="Set the [TO:] address to a group mailbox; (i.e. USCMD.somegroupmailbox.@acme.com)")]
+    [ValidateNotNullOrEmpty()] 
     [String]$To = "whatever@acme.something.com",
 
     [Parameter(ValueFromPipeline=$true,HelpMessage="Set [From:] address ; (i.e. System.Automation@hostname.com)")]
+    [ValidateNotNullOrEmpty()] 
     [String]$From = "System.Automation@hostname.com",
 
+    [Parameter(ValueFromPipeline=$true,HelpMessage="Set SMTP host")]
+    [ValidateNotNullOrEmpty()] 
     [String]$SMTPHost = "SMTP.Hostname.Local" ,
 
     [Parameter(ValueFromPipeline=$true,HelpMessage="CSV output file location [will overwrite]")]
+    [ValidateNotNullOrEmpty()] 
     [String]$File = "\\NetShare\Foo\Bar\VMwareSnapshots.csv",
 
     [Switch]$Credential
